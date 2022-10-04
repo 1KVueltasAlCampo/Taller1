@@ -85,14 +85,18 @@ public class AnimalServiceImpl implements AnimalService {
     private void parentsExists(UUID id,boolean sex){ //False for male. True for female
         if(id != null){
             Animal animal = getAnimalById(id,sex);
-            if(sex){
-                if(animal.equals(GENERIC_FEMALE_ANIMAL) || animal.getSex()!='F'){
-                    throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
+            if(sex){ //if(is female)
+                if(!animal.equals(GENERIC_FEMALE_ANIMAL)){
+                    if(animal.getSex()!='F'){
+                        throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
+                    }
                 }
             }
-            else{
-                if(animal.equals(GENERIC_MALE_ANIMAL)||animal.getSex()!='M'){
-                    throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
+            else{ //if(is male)
+                if(!animal.equals(GENERIC_MALE_ANIMAL)){
+                    if(animal.getSex()!='M'){
+                        throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
+                    }
                 }
             }
         }

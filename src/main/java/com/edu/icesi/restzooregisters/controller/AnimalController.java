@@ -48,7 +48,7 @@ public class AnimalController implements RestZooRegistersAPI {
     @Override
     public AnimalDTO updateAnimal(String animalName, AnimalDTO animalDTO) {
         allAnimalValidations(animalDTO);
-        return animalMapper.fromAnimal(animalService.updateAnimal(animalMapper.fromDTO(animalName,animalDTO)));
+        return animalMapper.fromAnimal(animalService.updateAnimal(animalMapper.fromDTO(animalDTO)));
     }
 
     private void allAnimalValidations(AnimalDTO animalDTO){
