@@ -56,7 +56,7 @@ public class AnimalServiceImpl implements AnimalService {
     @Override
     public Animal createAnimal(Animal animal) {
         isRepeated(animal.getName());
-        validateCreation(animal);
+        validateParentsCreation(animal);
         return animalRepository.save(animal);
     }
 
@@ -70,36 +70,57 @@ public class AnimalServiceImpl implements AnimalService {
         Animal searchedAnimal = getAnimalByName(animal.getName());
         if(searchedAnimal != null){
             verificateNotNull(searchedAnimal,animal);
-            validateCreation(animal);
+            validateParentsCreation(animal);
             animal.setId(searchedAnimal.getId());
             return animalRepository.save(animal);
         }
         throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_01,CODE_01.getMessage()));
     }
 
-    private void validateCreation(Animal animal){ //False for male. True for female
-        parentsExists(animal.getFatherID(),false);
-        parentsExists(animal.getMotherID(),true);
+    private void validateParentsCreation(Animal animal){ //False for male. True for female
+        validateFatherCreation(animal);
+        validateMotherCreation(animal);
     }
 
-    private void parentsExists(UUID id,boolean sex){ //False for male. True for female
+    private void validateFatherCreation(Animal animal){
+        UUID fatherID = animal.getFatherID();
+        if ((parentsExists(fatherID, false))) {
+            animal.setFatherID(fatherID);
+        } else {
+            animal.setFatherID(GENERIC_MALE_ID);
+        }
+    }
+    private void validateMotherCreation(Animal animal){
+        UUID motherID = animal.getMotherID();
+        if ((parentsExists(motherID, false))) {
+            animal.setMotherID(motherID);
+        } else {
+            animal.setMotherID(GENERIC_FEMALE_ID);
+        }
+    }
+
+    private boolean parentsExists(UUID id,boolean sex){ //False for male. True for female
+        System.out.println(id);
         if(id != null){
             Animal animal = getAnimalById(id,sex);
             if(sex){ //if(is female)
-                if(!animal.equals(GENERIC_FEMALE_ANIMAL)){
+                if( !(animal.getId().equals(GENERIC_FEMALE_ID)) ){
                     if(animal.getSex()!='F'){
                         throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
                     }
+                    return true;
                 }
             }
             else{ //if(is male)
-                if(!animal.equals(GENERIC_MALE_ANIMAL)){
+                if( !(animal.getId().equals(GENERIC_MALE_ID)) ){
                     if(animal.getSex()!='M'){
                         throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
                     }
+                    return true;
                 }
             }
         }
+        return false;
     }
 
 

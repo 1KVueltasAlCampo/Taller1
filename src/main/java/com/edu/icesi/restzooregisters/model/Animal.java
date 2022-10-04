@@ -38,8 +38,6 @@ public class Animal {
     @PrePersist
     public void generateIds(){
         this.id = UUID.randomUUID();
-        this.fatherID = GenericTurtles.GENERIC_MALE_ID;
-        this.motherID = GenericTurtles.GENERIC_FEMALE_ID;
     }
 
 }
