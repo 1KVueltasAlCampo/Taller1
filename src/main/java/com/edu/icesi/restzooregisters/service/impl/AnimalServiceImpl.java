@@ -89,7 +89,7 @@ public class AnimalServiceImpl implements AnimalService {
                 if(animal.equals(GENERIC_FEMALE_ANIMAL) || animal.getSex()!='F'){
                     throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
                 }
-            } 
+            }
             else{
                 if(animal.equals(GENERIC_MALE_ANIMAL)||animal.getSex()!='M'){
                     throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
