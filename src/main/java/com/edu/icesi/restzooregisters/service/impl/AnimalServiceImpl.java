@@ -43,12 +43,14 @@ public class AnimalServiceImpl implements AnimalService {
     }
 
     private Animal getAnimalById(UUID id,boolean sex){ //False for male. True for female
+        Animal generic;
         if(sex){
-            return animalRepository.findById(id).orElse(GENERIC_FEMALE_ANIMAL);
+            generic = GENERIC_FEMALE_ANIMAL;
         }
         else{
-            return animalRepository.findById(id).orElse(GENERIC_MALE_ANIMAL);
+            generic = GENERIC_MALE_ANIMAL;
         }
+        return animalRepository.findById(id).orElse(generic);
     }
 
     private Animal getAnimalByName(String animalName) {
@@ -73,9 +75,9 @@ public class AnimalServiceImpl implements AnimalService {
     }
 
     @Override
-    public Animal updateAnimal(Animal updatedAnimal) {
-        Animal originalAnimal = getAnimalByName(updatedAnimal.getName());
-        if(updatedAnimal != null){
+    public Animal updateAnimal(String animalName,Animal updatedAnimal) {
+        Animal originalAnimal = getAnimalByName(animalName);
+        if(originalAnimal != null){
              animalUpdateValidations(originalAnimal,updatedAnimal);
             return animalRepository.save(updatedAnimal);
         }
@@ -95,17 +97,23 @@ public class AnimalServiceImpl implements AnimalService {
 
     private void validateFatherCreation(Animal animal){
         UUID fatherID = animal.getFatherID();
-        if (fatherExists(fatherID)) {
-            animal.setFatherID(fatherID);
-        } else {
+        if(fatherID != null){
+            if (fatherExists(fatherID)) {
+                animal.setFatherID(fatherID);
+            }
+        }
+         else {
             animal.setFatherID(GENERIC_MALE_ID);
         }
     }
     private void validateMotherCreation(Animal animal){
         UUID motherID = animal.getMotherID();
-        if (motherExists(motherID)) {
-            animal.setMotherID(motherID);
-        } else {
+        if(motherID != null){
+            if (motherExists(motherID)) {
+                animal.setMotherID(motherID);
+            }
+        }
+        else {
             animal.setMotherID(GENERIC_FEMALE_ID);
         }
     }
