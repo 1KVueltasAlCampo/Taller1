@@ -1,6 +1,5 @@
 package com.edu.icesi.restzooregisters.service.impl;
 
-import com.edu.icesi.restzooregisters.dto.AnimalDTO;
 import com.edu.icesi.restzooregisters.error.exception.AnimalError;
 import com.edu.icesi.restzooregisters.error.exception.AnimalException;
 import com.edu.icesi.restzooregisters.model.Animal;
@@ -28,14 +27,18 @@ public class AnimalServiceImpl implements AnimalService {
 
     @Override
     public List<Animal> getAnimal(String animalName) {
-        List<Animal> animals = new ArrayList<>();
-        Animal animal = getAnimalByName(animalName);
-        if(animal == null){
-            throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_01,CODE_01.getMessage()));
+        Animal obtainedAnimal = getAnimalByName(animalName);
+        if(obtainedAnimal != null){
+            return getAnimalsList(obtainedAnimal);
         }
-        animals.add(animal);
-        animals.add(getAnimalById(animal.getFatherID(),false));
-        animals.add(getAnimalById(animal.getMotherID(),true));
+        throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_01,CODE_01.getMessage()));
+    }
+
+    private List<Animal> getAnimalsList(Animal obtainedAnimal){
+        List<Animal> animals = new ArrayList<>();
+        animals.add(obtainedAnimal);
+        animals.add(getAnimalById(obtainedAnimal.getFatherID(),false));
+        animals.add(getAnimalById(obtainedAnimal.getMotherID(),true));
         return animals;
     }
 
@@ -55,9 +58,13 @@ public class AnimalServiceImpl implements AnimalService {
 
     @Override
     public Animal createAnimal(Animal animal) {
+        animalCreationValidations(animal);
+        return animalRepository.save(animal);
+    }
+
+    private void animalCreationValidations(Animal animal){
         isRepeated(animal.getName());
         validateParentsCreation(animal);
-        return animalRepository.save(animal);
     }
 
     @Override
@@ -66,15 +73,19 @@ public class AnimalServiceImpl implements AnimalService {
     }
 
     @Override
-    public Animal updateAnimal(Animal animal) {
-        Animal searchedAnimal = getAnimalByName(animal.getName());
-        if(searchedAnimal != null){
-            verificateNotNull(searchedAnimal,animal);
-            validateParentsCreation(animal);
-            animal.setId(searchedAnimal.getId());
-            return animalRepository.save(animal);
+    public Animal updateAnimal(Animal updatedAnimal) {
+        Animal originalAnimal = getAnimalByName(updatedAnimal.getName());
+        if(updatedAnimal != null){
+             animalUpdateValidations(originalAnimal,updatedAnimal);
+            return animalRepository.save(updatedAnimal);
         }
         throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_01,CODE_01.getMessage()));
+    }
+
+    private void animalUpdateValidations(Animal originalAnimal,Animal updatedAnimal){
+        verificateNotNullAttributes(originalAnimal,updatedAnimal);
+        validateParentsCreation(updatedAnimal);
+        updatedAnimal.setId(originalAnimal.getId()); //To preserve the original ID
     }
 
     private void validateParentsCreation(Animal animal){ //False for male. True for female
@@ -84,7 +95,7 @@ public class AnimalServiceImpl implements AnimalService {
 
     private void validateFatherCreation(Animal animal){
         UUID fatherID = animal.getFatherID();
-        if ((parentsExists(fatherID, false))) {
+        if (fatherExists(fatherID)) {
             animal.setFatherID(fatherID);
         } else {
             animal.setFatherID(GENERIC_MALE_ID);
@@ -92,35 +103,33 @@ public class AnimalServiceImpl implements AnimalService {
     }
     private void validateMotherCreation(Animal animal){
         UUID motherID = animal.getMotherID();
-        if ((parentsExists(motherID, false))) {
+        if (motherExists(motherID)) {
             animal.setMotherID(motherID);
         } else {
             animal.setMotherID(GENERIC_FEMALE_ID);
         }
     }
 
-    private boolean parentsExists(UUID id,boolean sex){ //False for male. True for female
-        System.out.println(id);
-        if(id != null){
-            Animal animal = getAnimalById(id,sex);
-            if(sex){ //if(is female)
-                if( !(animal.getId().equals(GENERIC_FEMALE_ID)) ){
-                    if(animal.getSex()!='F'){
-                        throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
-                    }
-                    return true;
-                }
-            }
-            else{ //if(is male)
-                if( !(animal.getId().equals(GENERIC_MALE_ID)) ){
-                    if(animal.getSex()!='M'){
-                        throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
-                    }
-                    return true;
-                }
+    private boolean motherExists(UUID id){
+        boolean female = true;
+        Animal animal = getAnimalById(id,female);
+        if( !(animal.getId().equals(GENERIC_FEMALE_ID)) ){
+            if(animal.getSex()!='F'){
+                throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
             }
         }
-        return false;
+        return true;
+    }
+
+    private boolean fatherExists(UUID id){
+        boolean male = false;
+        Animal animal = getAnimalById(id,male);
+        if( !(animal.getId().equals(GENERIC_MALE_ID)) ){
+            if(animal.getSex()!='M'){
+                throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_08,CODE_08.getMessage()));
+            }
+        }
+        return true;
     }
 
 
@@ -134,21 +143,21 @@ public class AnimalServiceImpl implements AnimalService {
         return false;
     }
 
-    private void verificateNotNull(Animal searched,Animal newAnimal){
+    private void verificateNotNullAttributes(Animal originalAnimal, Animal newAnimal){
         if(newAnimal.getMotherID()==null){
-            newAnimal.setMotherID(searched.getMotherID());
+            newAnimal.setMotherID(originalAnimal.getMotherID());
         }
         if(newAnimal.getFatherID()==null){
-            newAnimal.setFatherID(searched.getFatherID());
+            newAnimal.setFatherID(originalAnimal.getFatherID());
         }
         if(newAnimal.getName()==null){
-            newAnimal.setName(searched.getName());
+            newAnimal.setName(originalAnimal.getName());
         }
         if(newAnimal.getSex()==' '){
-            newAnimal.setSex(searched.getSex());
+            newAnimal.setSex(originalAnimal.getSex());
         }
         if(newAnimal.getArrivalDate()==null){
-            newAnimal.setArrivalDate(searched.getArrivalDate());
+            newAnimal.setArrivalDate(originalAnimal.getArrivalDate());
         }
     }
 }
