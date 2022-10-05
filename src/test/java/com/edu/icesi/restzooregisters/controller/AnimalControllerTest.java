@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static com.edu.icesi.restzooregisters.constants.GenericTurtles.*;
+import static com.edu.icesi.restzooregisters.constants.TurtleCharacteristics.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -49,7 +50,7 @@ public class AnimalControllerTest {
     }
 
     private void setupScene2(){
-        animalName = "PablitoSSJ";
+        String name = "PablitoSSJ";
         char sex='M';
         double weight=140;
         int age=14;
@@ -57,7 +58,7 @@ public class AnimalControllerTest {
         LocalDateTime arrivalDate= TURTLE_DATE;
         UUID fatherID=GENERIC_MALE_ID;
         UUID motherID=GENERIC_FEMALE_ID;
-        updatedAnimalDTO=new AnimalDTO();
+        updatedAnimalDTO=new AnimalDTO(UUID.randomUUID(),name,sex,weight,age,height,arrivalDate,fatherID,motherID);
     }
 
     private boolean createGeneratesException(){
@@ -112,7 +113,7 @@ public class AnimalControllerTest {
     public void testValidateNameNoNumbers(){
         setupScene1();
         animalDTO.setName("123HolaSoyUnNombreInvalido456");
-        assertTrue(createGeneratesException());
+        assertTrue(createGeneratesException() && updateGeneratesException());
     }
 
     @Test
@@ -120,7 +121,42 @@ public class AnimalControllerTest {
         setupScene1();
         String name = StringUtils.repeat("a", 121);
         animalDTO.setName(name);
-        assertTrue(createGeneratesException());
+        assertTrue(createGeneratesException() && updateGeneratesException());
     }
+
+    @Test
+    public void testValidateDate(){
+        setupScene1();
+        animalDTO.setArrivalDate(LocalDateTime.MAX);
+        assertTrue(createGeneratesException() && updateGeneratesException());
+    }
+
+    @Test
+    public void testValidateAnimalHeight(){
+        setupScene1();
+        animalDTO.setHeight(MAX_HEIGHT+1);
+        assertTrue(createGeneratesException() && updateGeneratesException());
+    }
+
+    @Test
+    public void testValidateAnimalWeight(){
+        setupScene1();
+        animalDTO.setWeight(MAX_WEIGHT+1);
+        assertTrue(createGeneratesException() && updateGeneratesException());
+    }
+
+    @Test
+    public void testValidateAnimalAge(){
+        setupScene1();
+        animalDTO.setAge(MAX_AGE+1);
+        assertTrue(createGeneratesException() && updateGeneratesException());
+    }
+
+
+
+
+
+
+
 
 }
