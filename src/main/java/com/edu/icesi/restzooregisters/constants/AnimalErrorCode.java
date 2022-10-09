@@ -14,7 +14,8 @@ public enum AnimalErrorCode {
     CODE_05("The weight of the animal does not correspond to the physical characteristics of a turtle."),
     CODE_06("The age of the animal does not correspond to a turtle."),
     CODE_07("There is already an animal with that name"),
-    CODE_08("PARENT animal is not a male/female")
+    CODE_08("PARENT animal is not a male/female"),
+    CODE_09("Can't change the sex of an animal because it may be registered as a mother or father.")
     ;
 
     private String message;

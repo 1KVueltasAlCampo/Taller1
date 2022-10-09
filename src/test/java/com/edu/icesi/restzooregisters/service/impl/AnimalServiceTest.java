@@ -10,11 +10,13 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.edu.icesi.restzooregisters.constants.GenericTurtles.*;
 import static com.edu.icesi.restzooregisters.constants.GenericTurtles.GENERIC_FEMALE_ID;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -23,9 +25,10 @@ public class AnimalServiceTest {
     private AnimalRepository animalRepository;
     private AnimalService animalService;
     private String animalName;
-    private Animal animal;
-    private Animal updatedAnimal;
-    private Animal femaleAnimal;
+    private Animal sonAnimal;
+    private Animal updatedSonAnimal;
+    private Animal motherAnimal;
+    private Animal fatherAnimal;
 
     @BeforeEach
     private void init() {
@@ -33,7 +36,7 @@ public class AnimalServiceTest {
         animalService = new AnimalServiceImpl(animalRepository);
     }
 
-    private void setupScene1(){
+    private void setupSceneSonAnimal(){
         animalName="Pablito";
         char sex='M';
         double weight=131;
@@ -42,10 +45,10 @@ public class AnimalServiceTest {
         LocalDateTime arrivalDate= TURTLE_DATE;
         UUID fatherID=GENERIC_MALE_ID;
         UUID motherID=GENERIC_FEMALE_ID;
-        animal = new Animal(UUID.randomUUID(),animalName,sex,weight,age,height,arrivalDate,fatherID,motherID);
+        sonAnimal = new Animal(UUID.randomUUID(),animalName,sex,weight,age,height,arrivalDate,fatherID,motherID);
     }
 
-    private void setupScene2(){
+    private void setupSceneUpdatedSonAnimal(){
         String name = "PablitoSSJ";
         char sex='M';
         double weight=140;
@@ -54,10 +57,10 @@ public class AnimalServiceTest {
         LocalDateTime arrivalDate= TURTLE_DATE;
         UUID fatherID=GENERIC_MALE_ID;
         UUID motherID=GENERIC_FEMALE_ID;
-        updatedAnimal=new Animal(UUID.randomUUID(),name,sex,weight,age,height,arrivalDate,fatherID,motherID);
+        updatedSonAnimal=new Animal(UUID.randomUUID(),name,sex,weight,age,height,arrivalDate,fatherID,motherID);
     }
 
-    private void setupScene3(){
+    private void setupSceneMotherAnimal(){
         String name = "Camila";
         char sex='F';
         double weight=140;
@@ -66,22 +69,34 @@ public class AnimalServiceTest {
         LocalDateTime arrivalDate= TURTLE_DATE;
         UUID fatherID=GENERIC_MALE_ID;
         UUID motherID=GENERIC_FEMALE_ID;
-        femaleAnimal=new Animal(UUID.randomUUID(),name,sex,weight,age,height,arrivalDate,fatherID,motherID);
+        motherAnimal=new Animal(UUID.randomUUID(),name,sex,weight,age,height,arrivalDate,fatherID,motherID);
+    }
+
+    private void setupSceneFatherAnimal(){
+        String name = "Patricio";
+        char sex='M';
+        double weight=140;
+        int age=17;
+        double height=47;
+        LocalDateTime arrivalDate= TURTLE_DATE;
+        UUID fatherID=GENERIC_MALE_ID;
+        UUID motherID=GENERIC_FEMALE_ID;
+        fatherAnimal=new Animal(UUID.randomUUID(),name,sex,weight,age,height,arrivalDate,fatherID,motherID);
     }
 
     private List<Animal> fakeAnimalList(){
-        setupScene1();
         List<Animal> fakeAnimals = new ArrayList<>();
-        fakeAnimals.add(animal);
-        return  fakeAnimals;
+        fakeAnimals.add(sonAnimal);
+        fakeAnimals.add(fatherAnimal);
+        fakeAnimals.add(motherAnimal);
+        return fakeAnimals;
     }
 
 
 
     private boolean createGeneratesException(){
-        setupScene1();
         try {
-            animalService.createAnimal(animal);
+            animalService.createAnimal(sonAnimal);
         }
         catch (Exception e){
             return true;
@@ -90,10 +105,9 @@ public class AnimalServiceTest {
     }
 
     private boolean updateGeneratesException(){
-        setupScene2();
         when(animalRepository.findAll()).thenReturn(fakeAnimalList());
         try {
-            animalService.updateAnimal(animalName,updatedAnimal);
+            animalService.updateAnimal(animalName,updatedSonAnimal);
         }
         catch (Exception e){
             return true;
@@ -103,19 +117,22 @@ public class AnimalServiceTest {
 
     @Test
     public void testCreateAnimal(){
+        setupSceneSonAnimal();
         assertFalse(createGeneratesException());
         verify(animalRepository,times(1)).save(any());
     }
 
     @Test
     public void testUpdateAnimal(){
+        setupSceneSonAnimal();
+        setupSceneUpdatedSonAnimal();
         assertFalse(updateGeneratesException());
         verify(animalRepository,times(1)).save(any());
     }
 
     @Test
     public void testGetAnimal() {
-        setupScene1();
+        setupSceneSonAnimal();
         when(animalRepository.findAll()).thenReturn(fakeAnimalList());
         List<Animal> obtainedAnimal = animalService.getAnimal(animalName);
         verify(animalRepository, times(1)).findAll(); //The animal itself
@@ -129,9 +146,49 @@ public class AnimalServiceTest {
     }
 
     @Test
-    public void validateFatherCreation(){
-        //WIP
+    public void testFatherInCreate(){
+        setupSceneSonAnimal();
+        setupSceneMotherAnimal();
+        sonAnimal.setFatherID(motherAnimal.getId());
+        when(animalRepository.findById(sonAnimal.getFatherID())).thenReturn(Optional.ofNullable(motherAnimal));
+        assertTrue(createGeneratesException());
     }
 
+    @Test
+    public void testFatherInUpdate(){
+        setupSceneSonAnimal();
+        setupSceneUpdatedSonAnimal();
+        setupSceneMotherAnimal();
+        updatedSonAnimal.setFatherID(motherAnimal.getId());
+        when(animalRepository.findById(updatedSonAnimal.getFatherID())).thenReturn(Optional.ofNullable(motherAnimal));
+        assertTrue(updateGeneratesException());
+    }
+
+    @Test
+    public void testMotherInCreate(){
+        setupSceneSonAnimal();
+        setupSceneFatherAnimal();
+        sonAnimal.setMotherID(fatherAnimal.getId());
+        when(animalRepository.findById(sonAnimal.getMotherID())).thenReturn(Optional.ofNullable(fatherAnimal));
+        assertTrue(createGeneratesException());
+    }
+
+    @Test
+    public void testMotherInUpdate(){
+        setupSceneSonAnimal();
+        setupSceneUpdatedSonAnimal();
+        setupSceneFatherAnimal();
+        updatedSonAnimal.setMotherID(fatherAnimal.getId());
+        when(animalRepository.findById(updatedSonAnimal.getMotherID())).thenReturn(Optional.ofNullable(fatherAnimal));
+        assertTrue(updateGeneratesException());
+    }
+
+    @Test
+    public void testValidateNoSexChange(){
+        setupSceneSonAnimal();
+        setupSceneUpdatedSonAnimal();
+        updatedSonAnimal.setSex('F');
+        assertTrue(updateGeneratesException());
+    }
 
 }

@@ -87,7 +87,14 @@ public class AnimalServiceImpl implements AnimalService {
     private void animalUpdateValidations(Animal originalAnimal,Animal updatedAnimal){
         verificateNotNullAttributes(originalAnimal,updatedAnimal);
         validateParentsCreation(updatedAnimal);
+        validateNoSexChange(originalAnimal,updatedAnimal);
         updatedAnimal.setId(originalAnimal.getId()); //To preserve the original ID
+    }
+
+    private void validateNoSexChange(Animal originalAnimal,Animal updatedAnimal){
+        if(originalAnimal.getSex() != updatedAnimal.getSex()){
+            throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_09,CODE_09.getMessage()));
+        }
     }
 
     private void validateParentsCreation(Animal animal){ //False for male. True for female
