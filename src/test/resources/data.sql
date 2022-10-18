@@ -1,0 +1,1 @@
+INSERT INTO "ANIMAL" (id,name, sex, weight, age,height,arrival_date,fatherID,motherID) VALUES ('5631cbd3-cf53-415f-bd06-4e995ee3c322', 'Camila', 'F', '140', '17','47','2020-09-22 12:14:13','1eb46ded-6101-3694-9f49-598db6bff142','59bf924c-0a30-354f-ae4a-ec7f9122eeb1')
