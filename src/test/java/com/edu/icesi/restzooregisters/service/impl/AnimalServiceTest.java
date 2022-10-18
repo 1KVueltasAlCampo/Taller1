@@ -1,6 +1,5 @@
 package com.edu.icesi.restzooregisters.service.impl;
 
-import com.edu.icesi.restzooregisters.dto.AnimalDTO;
 import com.edu.icesi.restzooregisters.model.Animal;
 import com.edu.icesi.restzooregisters.repository.AnimalRepository;
 import com.edu.icesi.restzooregisters.service.AnimalService;
