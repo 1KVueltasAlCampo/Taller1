@@ -2,7 +2,6 @@ package com.edu.icesi.restzooregisters.integration;
 
 import com.edu.icesi.restzooregisters.dto.AnimalDTO;
 import com.edu.icesi.restzooregisters.error.exception.AnimalError;
-import com.edu.icesi.restzooregisters.error.exception.AnimalException;
 import com.edu.icesi.restzooregisters.integration.config.InitialDataConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -28,10 +27,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static com.edu.icesi.restzooregisters.constants.AnimalErrorCode.*;
-import static com.edu.icesi.restzooregisters.constants.TurtleCharacteristics.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasProperty;
@@ -45,7 +43,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         properties = { "spring.datasource.url=jdbc:h2:mem:testdb" })
 @Import({InitialDataConfig.class})
 @ActiveProfiles("test")
-public class CreateAnimalIntegrationTest {
+public class UpdateAnimalIntegrationTest {
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -54,7 +53,9 @@ public class CreateAnimalIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-
+    private static final String ANIMAL_NAME = "Camila";
+    private static final String ANIMAL_FATHER_UUID = "46b92d40-4fbd-11ed-bdc3-0242ac120002";
+    private static final String ANIMAL_MOTHER_UUID = "8b97ec58-4fbd-11ed-bdc3-0242ac120002";
 
 
     @BeforeEach
@@ -64,114 +65,83 @@ public class CreateAnimalIntegrationTest {
 
     @Test
     @SneakyThrows
-    public void createAnimal(){ //IS OK
-        String body = parseResourceToString("createAnimal.json");
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/zooregisters")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body)).andExpect(status().isOk())
+    public void updateAnimal(){ //IS OK
+        String body = parseResourceToString("updateAnimal.json");
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/zooregisters/"+ANIMAL_NAME)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body)).andExpect(status().isOk())
                 .andReturn();
+
+        System.out.println(result.getResponse().getContentAsString());
 
         AnimalDTO animalDTO= objectMapper.readValue(result.getResponse().getContentAsString(),AnimalDTO.class);
 
-        assertThat(animalDTO,hasProperty("name",is("Perry")));
+        assertThat(animalDTO,hasProperty("age",is(15)));
+        assertThat(animalDTO,hasProperty("weight",is(128.0)));
+        assertThat(animalDTO,hasProperty("height",is(49.0)));
     }
 
     @Test
     @SneakyThrows
-    public void createAnimalRepeated(){ //IS CONFLICT
-        String body = parseResourceToString("createAnimal.json");
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/zooregisters")
+    public void testNotFound(){
+        String body = parseResourceToString("updateAnimal.json");
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/zooregisters/IMNOTINTHEDATABASE")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body)).andExpect(status().isConflict())
+                        .content(body)).andExpect(status().isBadRequest())
                 .andReturn();
 
         AnimalError animalError = objectMapper.readValue(result.getResponse().getContentAsString(), AnimalError.class);
-        assertThat(animalError,hasProperty("code",is(CODE_07)));
-        assertThat(animalError,hasProperty("message",is(CODE_07.getMessage())));
+        assertThat(animalError,hasProperty("code",is(CODE_01)));
+        assertThat(animalError,hasProperty("message",is(CODE_01.getMessage())));
     }
+
 
     @Test
     @SneakyThrows
-    public void testNameNoNumbers(){
+    public void testFatherIsNotFemale(){
         AnimalDTO baseAnimal = baseAnimal();
-        baseAnimal.setName("1234");
+        baseAnimal.setFatherID(UUID.fromString(ANIMAL_MOTHER_UUID));
         String body = objectMapper.writeValueAsString(baseAnimal);
         MvcResult result = getBadRequestResult(body);
 
         AnimalError animalError = objectMapper.readValue(result.getResponse().getContentAsString(), AnimalError.class);
-        assertThat(animalError,hasProperty("code",is(CODE_02)));
-        assertThat(animalError,hasProperty("message",is(CODE_02.getMessage())));
+        assertThat(animalError,hasProperty("code",is(CODE_08)));
+        assertThat(animalError,hasProperty("message",is(CODE_08.getMessage())));
     }
 
     @Test
     @SneakyThrows
-    public void testNameLessThan120(){
+    public void testMotherIsNotMale(){
         AnimalDTO baseAnimal = baseAnimal();
-        String name = StringUtils.repeat("a", 121);
-        baseAnimal.setName(name);
+        baseAnimal.setMotherID(UUID.fromString(ANIMAL_FATHER_UUID));
         String body = objectMapper.writeValueAsString(baseAnimal);
         MvcResult result = getBadRequestResult(body);
 
         AnimalError animalError = objectMapper.readValue(result.getResponse().getContentAsString(), AnimalError.class);
-        assertThat(animalError,hasProperty("code",is(CODE_02)));
-        assertThat(animalError,hasProperty("message",is(CODE_02.getMessage())));
+        assertThat(animalError,hasProperty("code",is(CODE_08)));
+        assertThat(animalError,hasProperty("message",is(CODE_08.getMessage())));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testNoSexChange(){
+        AnimalDTO baseAnimal = baseAnimal();
+        baseAnimal.setSex('M');
+        String body = objectMapper.writeValueAsString(baseAnimal);
+        MvcResult result = getBadRequestResult(body);
+
+        AnimalError animalError = objectMapper.readValue(result.getResponse().getContentAsString(), AnimalError.class);
+        assertThat(animalError,hasProperty("code",is(CODE_09)));
+        assertThat(animalError,hasProperty("message",is(CODE_09.getMessage())));
     }
 
     @SneakyThrows
     private MvcResult getBadRequestResult(String body){
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/zooregisters")
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/zooregisters/"+ANIMAL_NAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body)).andExpect(status().isBadRequest())
                 .andReturn();
         return result;
-    }
-
-    @Test
-    @SneakyThrows
-    public void testValidateDate(){
-        AnimalDTO baseAnimal = baseAnimal();
-        baseAnimal.setArrivalDate(LocalDateTime.MAX);
-        String body = objectMapper.writeValueAsString(baseAnimal);
-        MvcResult result = getBadRequestResult(body);
-        AnimalError animalError = objectMapper.readValue(result.getResponse().getContentAsString(), AnimalError.class);
-        assertThat(animalError,hasProperty("code",is(CODE_03)));
-        assertThat(animalError,hasProperty("message",is(CODE_03.getMessage())));
-    }
-
-    @Test
-    @SneakyThrows
-    public void testValidateAnimalHeight(){
-        AnimalDTO baseAnimal = baseAnimal();
-        baseAnimal.setHeight(MAX_HEIGHT+1);
-        String body = objectMapper.writeValueAsString(baseAnimal);
-        MvcResult result = getBadRequestResult(body);
-        AnimalError animalError = objectMapper.readValue(result.getResponse().getContentAsString(), AnimalError.class);
-        assertThat(animalError,hasProperty("code",is(CODE_04)));
-        assertThat(animalError,hasProperty("message",is(CODE_04.getMessage())));
-    }
-
-    @Test
-    @SneakyThrows
-    public void testValidateAnimalWeight(){
-        AnimalDTO baseAnimal = baseAnimal();
-        baseAnimal.setWeight(MAX_WEIGHT+1);
-        String body = objectMapper.writeValueAsString(baseAnimal);
-        MvcResult result = getBadRequestResult(body);
-        AnimalError animalError = objectMapper.readValue(result.getResponse().getContentAsString(), AnimalError.class);
-        assertThat(animalError,hasProperty("code",is(CODE_05)));
-        assertThat(animalError,hasProperty("message",is(CODE_05.getMessage())));
-    }
-
-    @Test
-    @SneakyThrows
-    public void testValidateAnimalAge(){
-        AnimalDTO baseAnimal = baseAnimal();
-        baseAnimal.setAge(MAX_AGE+1);
-        String body = objectMapper.writeValueAsString(baseAnimal);
-        MvcResult result = getBadRequestResult(body);
-        AnimalError animalError = objectMapper.readValue(result.getResponse().getContentAsString(), AnimalError.class);
-        assertThat(animalError,hasProperty("code",is(CODE_06)));
-        assertThat(animalError,hasProperty("message",is(CODE_06.getMessage())));
     }
 
     @SneakyThrows
@@ -184,7 +154,7 @@ public class CreateAnimalIntegrationTest {
 
     @SneakyThrows
     private AnimalDTO baseAnimal(){
-        String body = parseResourceToString("createAnimal.json");
+        String body = parseResourceToString("updateAnimal.json");
         return objectMapper.readValue(body, AnimalDTO.class);
     }
 
