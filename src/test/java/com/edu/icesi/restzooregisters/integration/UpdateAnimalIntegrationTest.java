@@ -54,8 +54,8 @@ public class UpdateAnimalIntegrationTest {
     private ObjectMapper objectMapper;
 
     private static final String ANIMAL_NAME = "Camila";
-    private static final String ANIMAL_FATHER_UUID = "46b92d40-4fbd-11ed-bdc3-0242ac120002";
-    private static final String ANIMAL_MOTHER_UUID = "8b97ec58-4fbd-11ed-bdc3-0242ac120002";
+    private static final String ANIMAL_FATHER_UUID = "34366239-3264-3430-2d34-6662642d3131";
+    private static final String ANIMAL_MOTHER_UUID = "38623937-6563-3538-2d34-6662642d3131";
 
 
     @BeforeEach

@@ -14,6 +14,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class AnimalDTO {
 
+
+
     private UUID id;
     private String name;
     private char sex;

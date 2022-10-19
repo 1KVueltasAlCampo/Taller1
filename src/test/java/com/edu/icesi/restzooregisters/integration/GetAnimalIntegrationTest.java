@@ -74,9 +74,9 @@ public class GetAnimalIntegrationTest {
         AnimalDTO[] animalResults = animalResults(response);
 
 
-        assertThat(animalResults[0], hasProperty("name", is("Fabricio")));
-        assertThat(animalResults[1], hasProperty("name", is("Amanda")));
-        assertThat(animalResults[2], hasProperty("name", is("Camila")));
+        assertThat(animalResults[0], hasProperty("name", is("Camila")));
+        assertThat(animalResults[1], hasProperty("name", is("Fabricio")));
+        assertThat(animalResults[2], hasProperty("name", is("Amanda")));
     }
 
     @Test
