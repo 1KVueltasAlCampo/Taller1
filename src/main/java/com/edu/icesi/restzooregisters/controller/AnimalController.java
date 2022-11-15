@@ -9,6 +9,7 @@ import com.edu.icesi.restzooregisters.mapper.AnimalMapper;
 import com.edu.icesi.restzooregisters.service.AnimalService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.text.SimpleDateFormat;
@@ -29,22 +30,26 @@ public class AnimalController implements RestZooRegistersAPI {
     public final AnimalService animalService;
     public final AnimalMapper animalMapper;
 
+    @CrossOrigin(origins = "*")
     @Override
     public List<AnimalDTO> getAnimal(String animalName) {
         return animalService.getAnimal(animalName).stream().map(animalMapper::fromAnimal).collect(Collectors.toList());
     }
 
+    @CrossOrigin(origins = "*")
     @Override
     public AnimalDTO createAnimal(AnimalDTO animalDTO) {
         allAnimalValidations(animalDTO);
         return animalMapper.fromAnimal(animalService.createAnimal(animalMapper.fromDTO(animalDTO)));
     }
 
+    @CrossOrigin(origins = "*")
     @Override
     public List<AnimalDTO> getAnimals() {
         return animalService.getAnimals().stream().map(animalMapper::fromAnimal).collect(Collectors.toList());
     }
 
+    @CrossOrigin(origins = "*")
     @Override
     public AnimalDTO updateAnimal(String animalName, AnimalDTO animalDTO) {
         allAnimalValidations(animalDTO);
