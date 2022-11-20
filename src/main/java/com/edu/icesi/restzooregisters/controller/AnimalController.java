@@ -66,8 +66,13 @@ public class AnimalController implements RestZooRegistersAPI {
     }
 
     private void validateName(String name){
-        if(!name.matches("[aA-zZ ]{0,120}")){
-            throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_02,CODE_02.getMessage()));
+        if(name!=null){
+            if(!name.matches("[aA-zZ ]{0,120}")){
+                throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_02,CODE_02.getMessage()));
+            }
+        }
+        else{
+            throw new AnimalException(HttpStatus.BAD_REQUEST, new AnimalError(CODE_10,CODE_10.getMessage()));
         }
     }
 
